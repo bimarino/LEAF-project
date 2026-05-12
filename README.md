@@ -83,6 +83,9 @@ Then open the local URL shown in the terminal (usually `http://localhost:8501`),
   - small labeled set (2 queries)
   - Precision@5 and MRR for vector vs rerank (using the averages from `evaluation.ipynb`).
 
+## 4. Metadata-aware reranking (bonus)
+
+In addition to the embedding-based reranker, a simple metadata‑aware reranking step was implemented using the prompt difficulty field. For each query, the system looks for keywords such as “easy/beginner/basic/intro” and “advanced/hard/expert/difficult” and maps them to a target difficulty level (easy, medium, or hard). After the initial dense retrieval and reranking, prompts whose metadata difficulty matches this target receive a small positive bonus added to their reranker score, and the results are resorted. This keeps semantic similarity as the main signal, while making the final ranking more aligned with the user’s explicit difficulty intent when it is expressed in the query text.
 ## 7. Future work / extensions
 - One or two bullets:
   - metadata-aware ranking (likes, upvotes)
