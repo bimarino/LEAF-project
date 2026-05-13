@@ -54,6 +54,23 @@ def search(query: str, top_k: int = 5, use_reranker: bool = False):
     pairs = [(query, doc) for doc in docs]
     scores = reranker.predict(pairs)
 
+    # --- Difficulty-based metadata bonus ---
+    q = query.lower()
+    if any(word in q for word in ["easy", "beginner", "basic", "intro"]):
+        target_difficulty = "easy"
+    elif any(word in q for word in ["advanced", "hard", "expert", "difficult"]):
+        target_difficulty = "hard"
+    else:
+        target_difficulty = "medium"
+
+    BONUS = 0.05
+
+    scored_items = []
+    for id_, doc, meta, score in zip(ids, docs, metas, scores):
+        meta_diff = meta.get("difficulty") if isinstance(meta, dict) else None
+        bonus = BONUS if meta_diff == target_difficulty else 0.0
+        scored_items.append((id_, doc, meta, float(score) + bonus))
+
     # Sort by reranker score (descending)
     ranked = sorted(
         zip(ids, docs, metas, scores),
