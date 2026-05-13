@@ -1,26 +1,28 @@
 # LEAF-BIANCA: Semantic Search over Prompt Dataset
 
 ## 1. Project overview
-- One paragraph: what the system does (semantic search over a dataset of prompts, optional reranker to improve ranking).
+
+This project implements a semantic search system over a dataset of prompts. Given a natural-language query, the system retrieves semantically similar prompts using an embedding model and a Chroma vector database, and can optionally apply a cross‑encoder reranker. A simple metadata‑aware bonus based on prompt difficulty is integrated into the reranking step to better match user intent.
 
 ## 2. Repository structure
-- Brief bullets explaining:
-  - `data/` (dataset.json, FIELDS.md)
-  - `chroma_db/` (vector index built by build_index.py)
-  - `src/build_index.py` (builds Chroma index from dataset)
-  - `src/search.py` (runs search with optional reranker)
-  - `evaluation.ipynb` (computes Precision@5 and MRR with vs without reranker)
-  - `requirements.txt` (Python dependencies)
+
+- `data/`
+  - `dataset.json`: original prompt dataset.
+  - `FIELDS.md`: description of the dataset fields.
+- `chroma_db/`: vector index built from `dataset.json` (created by `src/build_index.py`).
+- `src/`
+  - `build_index.py`: builds the Chroma index from `data/dataset.json`.
+  - `search.py`: runs semantic search with optional cross‑encoder reranker and difficulty metadata bonus.
+- `notebooks/`
+  - `evaluation.ipynb`: computes Precision@5 and Mean Reciprocal Rank (MRR) for vector‑only retrieval vs reranker + difficulty on a small labeled test set.
+  - `demo.ipynb`: code-based demo that runs example queries and prints ranked results (same behaviour as the app).
+- `app.py`: Streamlit web app that provides a UI to run queries and see ranked prompts.
+- `requirements.txt`: Python dependencies.
 
 ## 3. Setup and installation
-- Explain:
-  - Python version you used
-  - How to create and activate `.venv`
-  - How to install packages from `requirements.txt`
-  ## 3. Setup and installation
 
 1. Clone or download this repository into a local folder (for example on your Desktop).
-2. Open the folder in VS Code.
+2. Open the folder (`LEAF-BIANCA`) in VS Code or a terminal.
 3. Create and activate a virtual environment:
 
    ```bash
@@ -34,35 +36,35 @@
    pip install -r requirements.txt
    ```
 
-All commands should be run from the project root folder (`LEAF-BIANCA`) in a terminal where the `.venv` environment is active.
+All commands below assume they are run from the project root folder (`LEAF-BIANCA`) in a terminal where the `.venv` environment is active.
 
 ## 4. How to run
 
 ### 4.1 Build the index (once)
 
-From the project root (`LEAF-BIANCA`) with the virtual environment active:
+From the project root:
 
 ```bash
 python src/build_index.py
 ```
 
-This reads `data/dataset.json` and builds the Chroma index in `chroma_db/`.
+This reads `data/dataset.json`, computes embeddings, and builds the Chroma index in `chroma_db/`.
 
 ### 4.2 Run search from the terminal
 
-Vector-only search:
+Vector‑only search:
 
 ```bash
 python src/search.py --query "Explain research in simple words to my grandma" --k 5
 ```
 
-Search with reranker:
+Search with cross‑encoder reranker + difficulty metadata:
 
 ```bash
 python src/search.py --query "Explain research in simple words to my grandma" --k 5 --rerank
 ```
 
-### 4.3 Run the Streamlit demo
+### 4.3 Run the Streamlit demo (UI)
 
 To launch the web demo:
 
@@ -70,23 +72,40 @@ To launch the web demo:
 streamlit run app.py
 ```
 
-Then open the local URL shown in the terminal (usually `http://localhost:8501`), type a query, choose `k`, and optionally enable the reranker to see ranked results.
+Then open the local URL shown in the terminal (usually `http://localhost:8501`), type a natural‑language query, choose `k`, and optionally enable the reranker to see ranked prompt results in the browser.
 
-## 5. Model and reranker
-- Short explanation of:
-  - Embedding model name
-  - Cross-encoder reranker model name
-  - Conceptual role of reranker (reorders initial results).
+If preferred, you can also run a code‑based demo:
+
+- Open `notebooks/demo.ipynb` and run the cells to execute example queries and print ranked results.
+
+## 5. Models and reranking
+
+- **Embedding model**: a sentence‑embedding model from Hugging Face is used to encode prompts and queries into dense vectors. These embeddings are stored and queried via the Chroma vector database using cosine similarity.
+- **Reranker model**: a cross‑encoder model (`cross-encoder/ms-marco-MiniLM-L-6-v2`) is used as a reranker. It scores pairs `(query, prompt)` and reorders the top‑k candidates returned by the vector search.
+- **Role of the reranker**: the embedding model efficiently finds a shortlist of semantically similar prompts; the cross‑encoder reranker then refines the ranking by looking at the full query–prompt pair, often improving the position of the most relevant prompts.
 
 ## 6. Evaluation results
-- Mention:
-  - small labeled set (2 queries)
-  - Precision@5 and MRR for vector vs rerank (using the averages from `evaluation.ipynb`).
 
-## 4. Metadata-aware reranking (bonus)
+Quantitative evaluation is implemented in `notebooks/evaluation.ipynb` on a small labeled set of two realistic queries. For each query, the notebook compares:
 
-In addition to the embedding-based reranker, a simple metadata‑aware reranking step was implemented using the prompt difficulty field. For each query, the system looks for keywords such as “easy/beginner/basic/intro” and “advanced/hard/expert/difficult” and maps them to a target difficulty level (easy, medium, or hard). After the initial dense retrieval and reranking, prompts whose metadata difficulty matches this target receive a small positive bonus added to their reranker score, and the results are resorted. This keeps semantic similarity as the main signal, while making the final ranking more aligned with the user’s explicit difficulty intent when it is expressed in the query text.
-## 7. Future work / extensions
-- One or two bullets:
-  - metadata-aware ranking (likes, upvotes)
-  - Streamlit demo UI
+- **Vector‑only retrieval** (embeddings + Chroma).
+- **Reranker + difficulty metadata** (cross‑encoder, plus the difficulty bonus described below).
+
+Using `k = 5`, the average metrics over the two test queries are:
+
+- Precision@5: vector‑only ≈ 0.60, reranker + difficulty ≈ 0.60.
+- MRR: vector‑only ≈ 0.75, reranker + difficulty ≈ 1.00.
+
+This means both systems retrieve a similar number of relevant prompts in the top 5, but the reranker tends to move a relevant prompt to the very top position more often, improving the user experience.
+
+Additional qualitative examples and full ranked lists for specific queries (e.g., beginner Python questions and formal email rewriting) are shown in `notebooks/demo.ipynb`.
+
+## 7. Metadata‑aware reranking (bonus)
+
+In addition to the embedding‑based reranker, a simple metadata‑aware reranking step was implemented using the prompt difficulty field. For each query, the system looks for keywords such as “easy/beginner/basic/intro” and “advanced/hard/expert/difficult” and maps them to a target difficulty level (easy, medium, or hard). After the initial dense retrieval and reranking, prompts whose metadata difficulty matches this target receive a small positive bonus added to their reranker score, and the results are resorted. This keeps semantic similarity as the main signal, while making the final ranking more aligned with the user’s explicit difficulty intent when it is expressed in the query text.
+
+## 8. Future work / extensions
+
+- Extend metadata‑aware reranking to include popularity signals (e.g., likes, upvotes) in addition to difficulty.
+- Add more labeled test queries to the evaluation notebook to obtain more robust metrics.
+- Enrich the Streamlit UI with additional controls (e.g., explicit difficulty filter, toggle for metadata bonus).
