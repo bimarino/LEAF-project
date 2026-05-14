@@ -2,20 +2,18 @@
 
 ## 1. Project overview
 
-This project implements a semantic search system over a dataset of prompts. Given a natural-language query, the system retrieves semantically similar prompts using an embedding model and a Chroma vector database, and can optionally apply a cross‑encoder reranker. A simple metadata‑aware bonus based on prompt difficulty is integrated into the reranking step to better match user intent.
+This project implements a semantic search system over a dataset of prompts. Given a natural-language query, the system retrieves semantically similar prompts using an embedding model and a Chroma vector database for semantic search. A  metadata‑aware based on prompt "difficulty" is integrated into the reranking step to better match the user's intention.
 
 ## 2. Repository structure
-
 - `data/`
   - `dataset.json`: original prompt dataset.
   - `FIELDS.md`: description of the dataset fields.
-- `chroma_db/`: vector index built from `dataset.json` (created by `src/build_index.py`).
-- `src/`
-  - `build_index.py`: builds the Chroma index from `data/dataset.json`.
-  - `search.py`: runs semantic search with optional cross‑encoder reranker and difficulty metadata bonus.
 - `notebooks/`
   - `evaluation.ipynb`: computes Precision@5 and Mean Reciprocal Rank (MRR) for vector‑only retrieval vs reranker + difficulty on a small labeled test set.
   - `demo.ipynb`: code-based demo that runs example queries and prints ranked results (same behaviour as the app).
+- `src/`
+  - `build_index.py`: builds the Chroma index from `data/dataset.json`.
+  - `search.py`: runs semantic search with optional cross‑encoder reranker and difficulty metadata bonus.
 - `app.py`: Streamlit web app that provides a UI to run queries and see ranked prompts.
 - `requirements.txt`: Python dependencies.
 
