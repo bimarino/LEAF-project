@@ -50,35 +50,37 @@ def search(query: str, top_k: int = 5, use_reranker: bool = False):
     ids = results["ids"][0]
     metas = results["metadatas"][0]
 
-    # Prepare (query, doc) pairs
+    # Prepare (query, doc) pairs and get reranker scores
     pairs = [(query, doc) for doc in docs]
     scores = reranker.predict(pairs)
 
     # --- Difficulty-based metadata bonus ---
     q = query.lower()
     if any(word in q for word in ["easy", "beginner", "basic", "intro"]):
-        target_difficulty = "easy"
+        target_difficulty = "beginner"
     elif any(word in q for word in ["advanced", "hard", "expert", "difficult"]):
-        target_difficulty = "hard"
+        target_difficulty = "advanced"
     else:
-        target_difficulty = "medium"
+        target_difficulty = "intermediate"
 
     BONUS = 0.05
 
+    # Build scored_items WITH the bonus already included in the score
     scored_items = []
     for id_, doc, meta, score in zip(ids, docs, metas, scores):
         meta_diff = meta.get("difficulty") if isinstance(meta, dict) else None
         bonus = BONUS if meta_diff == target_difficulty else 0.0
-        scored_items.append((id_, doc, meta, float(score) + bonus))
+        base_score = -float(score)          # lower distance -> higher base_score
+        scored_items.append((id_, doc, meta, base_score + bonus))
 
-    # Sort by reranker score (descending)
+    # Sort by score + bonus (descending) — fix: use scored_items, not raw scores
     ranked = sorted(
-        zip(ids, docs, metas, scores),
+        scored_items,
         key=lambda x: x[3],
         reverse=True,
     )
 
-    # Build a new results dict in the same format as Chroma
+    # Build results dict in the same format as Chroma
     reranked_results = {
         "ids": [[r[0] for r in ranked]],
         "documents": [[r[1] for r in ranked]],

@@ -22,12 +22,21 @@ if st.button("Search"):
     ids = results.get("ids", [[]])[0]
     docs = results.get("documents", [[]])[0]
     metas = results.get("metadatas", [[]])[0]
-    scores = results.get("scores", [[]])[0]  # for vector-only, you can switch to 'distances' if needed
+
+    if use_reranker:
+        # Reranker mode: use the final scores from search.py (higher is better)
+        scores = results.get("scores", [[]])[0]
+        score_label = "Score (reranker + difficulty bonus)"
+    else:
+        # Vector-only mode: use distances from Chroma (lower is better)
+        distances = results.get("distances", [[]])[0]
+        scores = distances
+        score_label = "Distance (lower is better)"
 
     for rank, (id_, doc, meta, score) in enumerate(zip(ids, docs, metas, scores), start=1):
         title = meta.get("title", "") if isinstance(meta, dict) else ""
         st.markdown(f"### Rank {rank} – {title}")
         st.write(f"ID: {id_}")
-        st.write(f"Score: {score}")
+        st.write(f"{score_label}: {score}")
         st.write(doc[:300] + "…")
         st.markdown("---")

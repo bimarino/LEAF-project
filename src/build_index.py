@@ -20,11 +20,14 @@ def build_documents_and_metadata(data):
     for item in data:
         title = item.get("title", "")
         content = item.get("content", "")
+        difficulty = item.get("difficulty", "")
+
         texts.append(f"{title}\n\n{content}")
         ids.append(item["id"])
         metadatas.append({
             "title": title,
             "category": item.get("category", ""),
+            "difficulty": difficulty,  # <-- this line
             "likes": item.get("likes", 0),
             "upvotes": item.get("upvotes", 0),
             "author_reputation": item.get("author_reputation", 0),

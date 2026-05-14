@@ -8,11 +8,13 @@ This project implements a semantic search system over a dataset of prompts. Give
 - data/
   - dataset.json: original prompt dataset
   - FIELDS.md: description of the dataset fields
+- chroma_db/
+  - Persistent Chroma vector index built from dataset.json by src/build_index.py
 - notebooks/
   - evaluation.ipynb: computes Precision@5 and Mean Reciprocal Rank (MRR) for vector‑only retrieval vs reranker + difficulty on a small labeled test set
   - demo.ipynb: code-based demo that runs example queries and prints ranked results (same behaviour as the app)
 - src/
-  - build_index.py: builds the Chroma index from data/dataset.json
+  - build_index.py: builds the Chroma index from data/dataset.json using SentenceTransformerEmbeddingFunction
   - search.py: runs semantic search with optional cross‑encoder reranker and difficulty metadata bonus
 - app.py: Streamlit web app that provides a UI to run queries and see ranked prompts
 - requirements.txt: Python dependencies
