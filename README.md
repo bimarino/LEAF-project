@@ -1,8 +1,9 @@
-# LEAF-BIANCA - Semantic Search over Prompt Dataset
+# LEAF-BIANCA - Semantic Search over Prompts Dataset
 
 ## Project overview
 
-This project implements a semantic search system over a dataset of prompts. Given a natural-language query, the system retrieves semantically similar prompts using an embedding model and a Chroma vector database for semantic search. A  metadata‑aware based on prompt "difficulty" is integrated into the reranking step to better match the user's intention.
+The aim of this project is to optimize a prompts dataset by implementing a semantic search tool to ensure interpretability and coherence to the user’s experience. The semantic search consists in a process where prompts are retrieved based on semantic similarity after providing a query in natural-language. This is done through the use of an embedding model and Chroma vector database. Lastly, to enhance the user’s experience, a metadata aware based on difficulty was incorporated within the reranking step. 
+
 
 ## Repository structure
 - data/
@@ -22,31 +23,22 @@ This project implements a semantic search system over a dataset of prompts. Give
 ## Setup and installation
 
 1. Download this repository into a local folder 
-2. Open the folder (`LEAF-BIANCA`) in VS Code or terminal
-3. Create and activate a virtual environment:
+2. Open the folder (LEAF-BIANCA) in terminal
+3. Create the virtual environment:
 
-   ```bash
    python3 -m venv .venv
    source .venv/bin/activate
-   ```
 
-4. Install the Python dependencies:
+4. Install dependencies:
 
-   ```bash
    pip install -r requirements.txt
-   ```
 
-All commands below assume they are run from the project root folder (`LEAF-BIANCA`) in a terminal where the `.venv` environment is active.
+(To run commands below assume to run from the project root folder (LEAF-BIANCA) in a terminal where the `.venv` environment is active)
 
-## How to run
+##To run
+From project root:
 
-### Build the index 
-
-From the project root:
-
-```bash
 python src/build_index.py
-```
 
 This reads data/dataset.json, computes embeddings, and builds the Chroma index in chroma_db/
 
@@ -54,29 +46,18 @@ This reads data/dataset.json, computes embeddings, and builds the Chroma index i
 
 Vector‑only search:
 
-```bash
 python src/search.py --query "Explain research in simple words to my grandma" --k 5
-```
 
 Search with cross‑encoder reranker + difficulty metadata:
 
-```bash
 python src/search.py --query "Explain research in simple words to my grandma" --k 5 --rerank
-```
 
-### Run the Streamlit demo (UI)
+### Run the Streamlit demo (UI) by
 
-To launch the web demo:
-
-```bash
 streamlit run app.py
-```
 
-Then open the local URL shown in the terminal (usually http://localhost:8501), type a natural‑language query, choose k, and  enable the reranker to see ranked prompt results.
-
-If preferred, run a code‑based demo:
-
-- Open notebooks/demo.ipynb and run the cells to execute example queries and print ranked results.
+It will show something like (http://localhost:8501) then type a natural‑language query.
+You can choose (number)k and see ranked prompt results 
 
 ## Models and reranking
 
@@ -102,7 +83,7 @@ Qualitative examples and full ranked lists for specific queries are shown in not
 
 ## Metadata‑aware reranking 
 
-In addition to the embedding‑based reranker, a simple metadata‑aware reranking step was implemented using the prompt difficulty field. For each query, the system looks for keywords such as “easy/beginner/basic/intro” and “advanced/hard/expert/difficult” and maps them to a target difficulty level (easy, medium, or hard). After the initial dense retrieval and reranking, prompts whose metadata difficulty matches this target receive a small positive bonus added to their reranker score, and the results are resorted. This keeps semantic similarity as the main signal while making the final ranking more aligned with the user’s explicit difficulty intent when it is expressed in the query.
+After the embedding reranker a metadata aware was added on prompt difficulty. When looking at each query the system will try to kind the following words: “easy/beginner/ibasic/intro” , “advanced/hard/expert/difficult”. Then allocates these to a certain difficulty level among (easy,medium,hard). After the reranking the prompts that were matched with the metadata correctly will be added a bonus to the reranker score. With this increase, the scores will be logically reranked.  This is done in order to unsure semantic similarity , to improve the final reranking and keep coherence with the user's difficulty query. 
 
 ## Further improvements
 
