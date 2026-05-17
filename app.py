@@ -6,7 +6,7 @@ import streamlit as st
 PROJECT_ROOT = Path(__file__).resolve().parent
 sys.path.append(str(PROJECT_ROOT / "src"))
 
-from search import search  # reuse your existing function
+from search import search  
 
 
 st.title("LEAF-BIANCA Semantic Search Demo")
@@ -24,11 +24,9 @@ if st.button("Search"):
     metas = results.get("metadatas", [[]])[0]
 
     if use_reranker:
-        # Reranker mode: use the final scores from search.py (higher is better)
         scores = results.get("scores", [[]])[0]
         score_label = "Score (reranker + difficulty bonus)"
     else:
-        # Vector-only mode: use distances from Chroma (lower is better)
         distances = results.get("distances", [[]])[0]
         scores = distances
         score_label = "Distance (lower is better)"
